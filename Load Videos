@@ -1,0 +1,48 @@
+extends Area
+
+onready var TV = $Viewport/TVScreen/VideoPlayer
+onready var AnimPlayer = $AnimationPlayer
+
+var ChannelPath = "res://Videos/"
+var Channels: Array
+var CurrentChannel: int = 0
+
+var Power: bool = false
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	GetChannels()
+	print(Channels)
+
+func _input(event):
+	if event.is_action_pressed("ActionKey"):
+		if get_overlapping_areas().size() == 1:
+			if Power == false:
+				AnimPlayer.play("On-Off")
+				Power = true
+				TV.stream = load(Channels[CurrentChannel])
+				TV.play()
+			else:
+				AnimPlayer.play_backwards("On-Off")
+				TV.stop()
+				Power = false
+				
+	if event.is_action_pressed("ChangeChannel"):
+		if get_overlapping_areas().size() == 1:
+			if Power == true:
+				CurrentChannel += 1
+				if CurrentChannel == Channels.size():
+					CurrentChannel = 0
+				TV.stream = load(Channels[CurrentChannel])
+				TV.play()
+
+func GetChannels():
+	var Dir = Directory.new()
+	if Dir.open(ChannelPath) == OK:
+		Dir.list_dir_begin(true,true)
+		var FileName = Dir.get_next()
+		while FileName != "":
+			Channels.append(ChannelPath+FileName)
+			FileName = Dir.get_next()
+	else:
+		print("An Error Occured While Trying to Access: ", ChannelPath)
